@@ -16,18 +16,20 @@ namespace Csnake
 
         private string[,] field = new string[17, 19];
 
-        private int tick = 500;
+        private int tick = 200;
 
-        private bool point_collected = true;
+        private bool apple_collected = true;
 
-        private bool point_created = false;
+        private bool apple_created = false;
 
         private Tuple<int, int> point = new Tuple<int, int>(0, 0);
+
+        private bool can_move = true;
 
         // Runs the game with two threads
         public void Run_game()
         {
-
+            
             if (running)
             {
                 StartKeyPressed();
@@ -54,7 +56,7 @@ namespace Csnake
             // Render top and bottom
             for (int i = 0; i < horizontal_length; i++)
             {
-                this.field[0, i] = "_";
+                this.field[0, i] = "-";
                 this.field[vertical_length - 1, i] = "_";
             }
 
@@ -80,27 +82,27 @@ namespace Csnake
 
 
         // Create point
-        private void CreatePoint()
+        private void CreateApple()
         {
             Random rnd = new Random();
-            if (!point_created) {
+            if (!apple_created) {
                 int y_pos = rnd.Next(1, this.field.GetLength(0));
                 int x_pos = rnd.Next(1, this.field.GetLength(1));
 
                 this.point = new Tuple<int, int>(y_pos, x_pos);
 
-                this.point_created = true;
-                this.point_collected = false;
+                this.apple_created = true;
+                this.apple_collected = false;
             }
 
-            else if (this.point_collected)
+            else if (this.apple_collected)
             {
                 int y_pos = rnd.Next(1, this.field.GetLength(0));
                 int x_pos = rnd.Next(1, this.field.GetLength(1));
 
                 this.point = new Tuple<int, int>(y_pos, x_pos);
 
-                this.point_collected = false;
+                this.apple_collected = false;
             }
         }
 
@@ -118,10 +120,29 @@ namespace Csnake
             return true;
         }
 
+        // Checks if the apple has been eaten and creates a new
+        private bool CheckApple()
+        {
+            bool eatenApple = snake.Move(this.point.Item1, this.point.Item2);
+
+            if (eatenApple)
+            {
+
+                apple_created = false;
+                apple_collected = true;
+
+                CreateApple();
+
+                return true;
+            }
+
+            return false;
+        }
+
         // Renders the game to the console
         private void RenderGame()
         {
-            CreatePoint();
+            CreateApple();
             while (running)
             {
                 this.RenderField();
@@ -142,7 +163,12 @@ namespace Csnake
                 {
                     Console.WriteLine(row.ToString());
                 }
-                snake.Move(this.point.Item1, this.point.Item2);
+
+
+                this.CheckApple();
+
+                can_move = true;
+
             }
         }
 
@@ -182,25 +208,34 @@ namespace Csnake
             do
             {
                 keyinfo = Console.ReadKey();
-
-                if(keyinfo.Key == ConsoleKey.LeftArrow)
+                if (can_move)
                 {
-                    this.snake.ChangeDirection(0);
-                }
 
-                else if(keyinfo.Key == ConsoleKey.UpArrow)
+               
+                switch (keyinfo.Key)
                 {
-                    this.snake.ChangeDirection(1);
-                }
+                    case ConsoleKey.LeftArrow:
+                    this.snake.ChangeDirection(4);
+                    can_move = false;
+                    break;
 
-                else if(keyinfo.Key == ConsoleKey.RightArrow)
-                {
-                    this.snake.ChangeDirection(2);
-                }
-
-                else if (keyinfo.Key == ConsoleKey.DownArrow)
-                {
+                    case ConsoleKey.UpArrow:
                     this.snake.ChangeDirection(3);
+                    can_move = false;
+                    break;
+                    case ConsoleKey.RightArrow:
+                    this.snake.ChangeDirection(8);
+                    can_move = false;
+                    break;
+                    case ConsoleKey.DownArrow:
+                    this.snake.ChangeDirection(9);
+                    can_move = false;
+                    break;
+
+                    default:
+                    break;
+                }
+
                 }
 
             }
