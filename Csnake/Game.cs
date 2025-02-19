@@ -1,10 +1,7 @@
 ﻿using Csnake.Models;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Csnake
 {
@@ -14,29 +11,29 @@ namespace Csnake
 
         private Snake snake = new Snake();
 
-        private string[,] field = new string[17, 19];
+        private string[,] field = new string[18, 19];
 
-        private int tick = 200;
-
-        private bool apple_collected = true;
-
-        private bool apple_created = false;
+        private readonly int tick = 200;
 
         private Tuple<int, int> point = new Tuple<int, int>(0, 0);
 
         private bool can_move = true;
 
+        private int points = 0;
+
+        private List<Tuple<int, int>> empty_spaces = new List<Tuple<int, int>>();
+
         // Runs the game with two threads
         public void Run_game()
         {
-            
+
             if (running)
             {
                 StartKeyPressed();
                 StartRenderGame();
 
             }
-     
+
         }
 
         // Creates, starts the function RenderGame and returns it
@@ -56,19 +53,19 @@ namespace Csnake
             // Render top and bottom
             for (int i = 0; i < horizontal_length; i++)
             {
-                this.field[0, i] = "-";
+                this.field[1, i] = "-";
                 this.field[vertical_length - 1, i] = "_";
             }
 
             // Renders the sides
-            for (int i = 1; i < vertical_length -1; i++)
+            for (int i = 2; i < vertical_length - 1; i++)
             {
                 this.field[i, 0] = "|";
-                this.field[i, horizontal_length-1] = "|";
+                this.field[i, horizontal_length - 1] = "|";
             }
 
             // Renders the inside
-            for (int y = 1; y < vertical_length-1; y++)
+            for (int y = 2; y < vertical_length - 1; y++)
             {
                 for (int x = 1; x < horizontal_length - 1; x++)
                 {
@@ -80,30 +77,32 @@ namespace Csnake
 
         }
 
+        // Creates the positions for empty spaces
+        private void CreateEmptySpaces()
+        {
+            List<Tuple<int, int>> new_empty_spaces = new List<Tuple<int, int>>();
 
-        // Create point
+            for (int y = 2; y < field.GetLength(0) -1; y++)
+            {
+                for (int x = 1; x < field.GetLength(0) - 1; x++)
+                {
+                    new_empty_spaces.Add(new Tuple<int, int>(y, x));
+                }
+            }
+
+            this.empty_spaces = new_empty_spaces;
+        }
+
+        // Creates the apple
         private void CreateApple()
         {
             Random rnd = new Random();
-            if (!apple_created) {
-                int y_pos = rnd.Next(1, this.field.GetLength(0));
-                int x_pos = rnd.Next(1, this.field.GetLength(1));
+            this.CreateEmptySpaces();
 
-                this.point = new Tuple<int, int>(y_pos, x_pos);
+                int index = rnd.Next(0, this.empty_spaces.Count());
 
-                this.apple_created = true;
-                this.apple_collected = false;
-            }
+                this.point = this.empty_spaces[index];
 
-            else if (this.apple_collected)
-            {
-                int y_pos = rnd.Next(1, this.field.GetLength(0));
-                int x_pos = rnd.Next(1, this.field.GetLength(1));
-
-                this.point = new Tuple<int, int>(y_pos, x_pos);
-
-                this.apple_collected = false;
-            }
         }
 
         // Replaces the empty positions with the tail and returns the field
@@ -128,9 +127,6 @@ namespace Csnake
             if (eatenApple)
             {
 
-                apple_created = false;
-                apple_collected = true;
-
                 CreateApple();
 
                 return true;
@@ -142,6 +138,7 @@ namespace Csnake
         // Renders the game to the console
         private void RenderGame()
         {
+            Console.CursorVisible = false;
             CreateApple();
             while (running)
             {
@@ -156,16 +153,19 @@ namespace Csnake
                 this.field[this.point.Item1, this.point.Item2] = "@";
 
                 Thread.Sleep(this.tick);
-                Console.Clear();
-
+                
+                Console.SetCursorPosition(0, 0);
                 var field_string_array = this.BuildField();
-                foreach (var row in field_string_array)
+
+                string field_string = string.Join(System.Environment.NewLine, field_string_array);
+
+                Console.Write(field_string);
+
+
+                if (this.CheckApple())
                 {
-                    Console.WriteLine(row.ToString());
-                }
-
-
-                this.CheckApple();
+                    this.points++;
+                };
 
                 can_move = true;
 
@@ -176,8 +176,9 @@ namespace Csnake
         private string[] BuildField()
         {
             string[] field_string_array = new string[this.field.GetLength(0)];
+            field_string_array[0] = $"Points: {this.points}";
 
-            for (int y = 0; y < field_string_array.Length; y++)
+            for (int y = 1; y < field_string_array.Length; y++)
             {
                 StringBuilder sb = new StringBuilder("", this.field.GetLength(1));
                 for (int x = 0; x < this.field.GetLength(1); x++)
@@ -190,7 +191,7 @@ namespace Csnake
 
             return field_string_array;
         }
-        
+
 
         // Creates a thread with the function KeyPressed and returns it
         private Thread StartKeyPressed()
@@ -211,31 +212,25 @@ namespace Csnake
                 if (can_move)
                 {
 
-               
-                switch (keyinfo.Key)
-                {
-                    case ConsoleKey.LeftArrow:
-                    this.snake.ChangeDirection(4);
-                    can_move = false;
-                    break;
+                    switch (keyinfo.Key)
+                    {
+                        case ConsoleKey.LeftArrow:
+                        this.snake.ChangeDirection(4);
+                        break;
+                        case ConsoleKey.UpArrow:
+                        this.snake.ChangeDirection(3);
+                        break;
+                        case ConsoleKey.RightArrow:
+                        this.snake.ChangeDirection(8);
+                        break;
+                        case ConsoleKey.DownArrow:
+                        this.snake.ChangeDirection(9);
+                        break;
 
-                    case ConsoleKey.UpArrow:
-                    this.snake.ChangeDirection(3);
+                        default:
+                        break;
+                    }
                     can_move = false;
-                    break;
-                    case ConsoleKey.RightArrow:
-                    this.snake.ChangeDirection(8);
-                    can_move = false;
-                    break;
-                    case ConsoleKey.DownArrow:
-                    this.snake.ChangeDirection(9);
-                    can_move = false;
-                    break;
-
-                    default:
-                    break;
-                }
-
                 }
 
             }

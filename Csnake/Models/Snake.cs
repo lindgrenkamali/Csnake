@@ -10,44 +10,44 @@ namespace Csnake.Models
     {
         int direction = 4;
         int length = 3;
-        Tuple<int, int>[] snake_body = [new Tuple<int,int>(7, 9), new Tuple<int, int>(7, 10), new Tuple<int, int>(7,11)];
+        Tuple<int, int>[] snake_body = [new Tuple<int, int>(7, 9), new Tuple<int, int>(7, 10), new Tuple<int, int>(7, 11)];
 
-       public bool ChangeDirection(int direction)
+        public bool ChangeDirection(int direction)
         {
-            if (direction == this.direction || direction + this.direction == 12) {
-            return false;
-                }
+            // The direction can't go from up to down and left to right, vice versa.
+            if (direction == this.direction || direction + this.direction == 12)
+            {
+                return false;
+            }
 
 
-        else
-        {
-            this.direction = direction;
-            return true;
+            else
+            {
+                this.direction = direction;
+                return true;
+            }
+
         }
 
-        }
-
+        // Position of head.
         public Tuple<int, int> GetHead()
         {
             return this.snake_body[0];
         }
 
-        public Tuple<int, int>[] GetTail() {
+        // The positions of the tail
+        public Tuple<int, int>[] GetTail()
+        {
             return this.snake_body[1..];
         }
 
-
-        public int GetDirection()
-        {
-            return this.direction;
-        }
-
         // Runs when apple has been eaten, adds 1 to length and repositions the body.
-        public bool EatApple(int apple_y, int apple_x) {
+        public bool EatApple(int apple_y, int apple_x)
+        {
             this.length++;
             Tuple<int, int>[] new_tail_positions = new Tuple<int, int>[this.length];
             new_tail_positions[0] = new Tuple<int, int>(apple_y, apple_x);
-            
+
             this.snake_body.CopyTo(new_tail_positions, 1);
 
             this.snake_body = new_tail_positions;
@@ -109,7 +109,7 @@ namespace Csnake.Models
             }
 
             if (current_y == food_y && current_x == food_x)
-                {
+            {
                 this.EatApple(food_y, food_x);
                 return true;
             }
@@ -124,6 +124,6 @@ namespace Csnake.Models
             return false;
 
         }
- 
+
     }
 }
