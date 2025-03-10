@@ -21,11 +21,9 @@ namespace Csnake.Models
             }
 
 
-            else
-            {
-                this.direction = direction;
-                return true;
-            }
+            this.direction = direction;
+            return true;
+
 
         }
 
